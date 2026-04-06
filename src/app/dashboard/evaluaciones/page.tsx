@@ -13,6 +13,7 @@ export default function EvaluacionesPage() {
   const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({});
   const [editingSubject, setEditingSubject] = useState<string | null>(null);
   const [editedComponents, setEditedComponents] = useState<Record<string, Partial<EvaluationComponent>>>({});
+  const [editedEvals, setEditedEvals] = useState<Record<string, { name: string; percentage: number }>>({});
   const [saving, setSaving] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -61,14 +62,15 @@ export default function EvaluacionesPage() {
 
   const startEditing = (subjectId: string) => {
     setEditingSubject(subjectId);
-    // Initialize edit state with current values
     const subject = subjects.find(s => s.id === subjectId);
     if (subject?.evaluations) {
-      const edits: Record<string, Partial<EvaluationComponent>> = {};
+      const compEdits: Record<string, Partial<EvaluationComponent>> = {};
+      const evalEdits: Record<string, { name: string; percentage: number }> = {};
       for (const ev of subject.evaluations) {
+        evalEdits[ev.id] = { name: ev.name, percentage: ev.percentage };
         if (ev.components) {
           for (const comp of ev.components) {
-            edits[comp.id] = {
+            compEdits[comp.id] = {
               type: comp.type,
               percentage: comp.percentage,
               due_date: comp.due_date || '',
@@ -76,13 +78,22 @@ export default function EvaluacionesPage() {
           }
         }
       }
-      setEditedComponents(edits);
+      setEditedComponents(compEdits);
+      setEditedEvals(evalEdits);
     }
   };
 
   const cancelEditing = () => {
     setEditingSubject(null);
     setEditedComponents({});
+    setEditedEvals({});
+  };
+
+  const updateEvalField = (evalId: string, field: string, value: string | number) => {
+    setEditedEvals(prev => ({
+      ...prev,
+      [evalId]: { ...prev[evalId], [field]: value },
+    }));
   };
 
   const updateComponentField = (compId: string, field: string, value: string | number) => {
@@ -95,16 +106,24 @@ export default function EvaluacionesPage() {
   const saveEdits = async () => {
     setSaving(true);
     try {
-      const promises = Object.entries(editedComponents).map(([compId, changes]) =>
+      const compPromises = Object.entries(editedComponents).map(([compId, changes]) =>
         fetch(`/api/components/${compId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(changes),
         })
       );
-      await Promise.all(promises);
+      const evalPromises = Object.entries(editedEvals).map(([evalId, changes]) =>
+        fetch(`/api/evaluations/${evalId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(changes),
+        })
+      );
+      await Promise.all([...compPromises, ...evalPromises]);
       setEditingSubject(null);
       setEditedComponents({});
+      setEditedEvals({});
       setSaveMessage(locale === 'es' ? '✅ Cambios guardados' : '✅ Changes saved');
       setTimeout(() => setSaveMessage(''), 3000);
       await fetchData();
@@ -202,8 +221,33 @@ export default function EvaluacionesPage() {
                   {subject.evaluations.map(ev => (
                     <div key={ev.id} className="eval-block">
                       <div className="eval-block-header">
-                        <span className="eval-block-name">{ev.name}</span>
-                        <span className="eval-block-percentage">{ev.percentage}%</span>
+                        {isEditing ? (
+                          <>
+                            <input
+                              className="form-input form-input-sm"
+                              style={{ width: 180, background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600 }}
+                              value={editedEvals[ev.id]?.name ?? ev.name}
+                              onChange={e => updateEvalField(ev.id, 'name', e.target.value)}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <input
+                                className="form-input form-input-sm"
+                                type="number"
+                                style={{ width: 60, textAlign: 'center' }}
+                                value={editedEvals[ev.id]?.percentage ?? ev.percentage}
+                                onChange={e => updateEvalField(ev.id, 'percentage', parseInt(e.target.value) || 0)}
+                                min={0}
+                                max={100}
+                              />
+                              <span style={{ color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.85rem' }}>%</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span className="eval-block-name">{ev.name}</span>
+                            <span className="eval-block-percentage">{ev.percentage}%</span>
+                          </>
+                        )}
                       </div>
                       <div className="eval-components">
                         {ev.components?.map(comp => (

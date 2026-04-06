@@ -919,6 +919,71 @@ body {
   z-index: 1000;
 }
 
+/* ==================== WEIGHTED BREAKDOWN ==================== */
+
+.weighted-breakdown {
+  margin-top: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.weighted-title {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(108, 92, 231, 0.06);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.weighted-rows {
+  padding: 4px 0;
+}
+
+.weighted-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.weighted-row:last-child {
+  border-bottom: none;
+}
+
+.weighted-row-name {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.weighted-row-calc {
+  color: var(--text-primary);
+  font-family: 'Inter', monospace;
+  font-size: 0.82rem;
+}
+
+.weighted-row-calc strong {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.weighted-row-total {
+  background: rgba(108, 92, 231, 0.06);
+  border-top: 2px solid var(--border-accent);
+  padding: 14px 16px;
+}
+
+.weighted-row-total .weighted-row-name {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
 /* ==================== LOADING ==================== */
 
 .loading-container {

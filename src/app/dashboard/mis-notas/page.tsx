@@ -260,6 +260,38 @@ export default function MisNotasPage() {
                       </div>
                     );
                   })}
+
+                  {/* Weighted calculation breakdown */}
+                  {subjectAvg !== null && (
+                    <div className="weighted-breakdown">
+                      <div className="weighted-title">
+                        📊 {locale === 'es' ? 'Cálculo del Promedio Ponderado' : 'Weighted Average Calculation'}
+                      </div>
+                      <div className="weighted-rows">
+                        {subject.evaluations.map(ev => {
+                          const evalAvg = ev.components ? calcEvalAvg(ev.components) : null;
+                          if (evalAvg === null) return null;
+                          const contribution = evalAvg * (ev.percentage / 100);
+                          return (
+                            <div key={ev.id} className="weighted-row">
+                              <span className="weighted-row-name">{ev.name} ({ev.percentage}%)</span>
+                              <span className="weighted-row-calc">
+                                {formatGrade(evalAvg)} × {(ev.percentage / 100).toFixed(2)} = <strong>{contribution.toFixed(2)}</strong>
+                              </span>
+                            </div>
+                          );
+                        })}
+                        <div className="weighted-row weighted-row-total">
+                          <span className="weighted-row-name">
+                            {locale === 'es' ? 'Promedio Final' : 'Final Average'}
+                          </span>
+                          <span className={`grade-value ${getGradeClass(subjectAvg)}`} style={{ fontSize: '1.2rem' }}>
+                            {formatGrade(subjectAvg)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
